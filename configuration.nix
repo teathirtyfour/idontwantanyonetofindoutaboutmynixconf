@@ -11,17 +11,21 @@
     ];
 
   # Use the GRUB 2 boot loader.
-  boot.initrd.kernelModules = [ "i915" "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
+  boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
   boot.loader.grub.enable = true;
-  boot.kernelParams = [ "nvidia_drm.modeset=1" ];
+  boot.kernelParams = [
+    "nvidia_drm.modeset=1"
+    "nvidia_drm.fbdev=1"
+    "intel_pstate=passive"
+  ];
   # boot.loader.grub.efiSupport = true;
   # boot.loader.grub.efiInstallAsRemovable = true;
   # boot.loader.efi.efiSysMountPoint = "/boot/efi";
   # Define on which hard drive you want to install Grub.
   boot.loader.grub.device = "/dev/sda"; # or "nodev" for efi only
 
-  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # Use LTS kernel.
+  boot.kernelPackages = pkgs.linuxPackages;
 
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -34,12 +38,13 @@
 
   hardware.graphics = {
     enable = true;
-    # enable32bit = true;
+    enable32Bit = true;
   };
   
   hardware.nvidia = {
     modesetting.enable = true;
     powerManagement.enable = false;
+    powerManagement.finegrained = false;
     open = false;
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
@@ -65,7 +70,7 @@
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
-  i18n.defaultLocale = "en_US.UTF-8";
+  # i18n.defaultLocale = "en_US.UTF-8";
   # console = {
   #   font = "Lat2-Terminus16";
   #   keyMap = "us";
@@ -84,7 +89,7 @@
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-  services.xserver.videoDrivers = [ "nvidia" "intel" ];
+  services.xserver.videoDrivers = [ "nvidia" ];
 
 
   # Configure keymap in X11
@@ -92,7 +97,7 @@
   # services.xserver.xkb.options = "eurosign:e,caps:escape";
 
   # Enable CUPS to print documents.
-  services.printing.enable = true;
+  # services.printing.enable = true;
 
   # Enable sound.
   # services.pulseaudio.enable = true;
@@ -105,15 +110,11 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.libinput.enable = true;
 
-  # services.displayManager.sddm.enable = true;
-  # services.displayManager.sddm.wayland.enable = true;  
-  # services.xserver.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
-  services.flatpak.enable = true;
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = false;
-    theme="hyprland_kath";
+    # theme="hyprland_kath";
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -130,6 +131,7 @@
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.nvidia.acceptLicense = true;
   environment.systemPackages = with pkgs; [
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
@@ -149,9 +151,9 @@
     # (discord.override { withVencord=true; })
     vesktop
     microsoft-edge
-    kdePackages.dolphin
-    kdePackages.sddm
-    sddm-astronaut
+#     kdePackages.dolphin
+#     kdePackages.sddm
+#     sddm-astronaut
     vulkan-tools
     flatpak
     prismlauncher
@@ -168,10 +170,15 @@
     grc
     git
     gamemode
-    flameshot
-    grim
+#     flameshot
+#     grim
     htop
     btop
+    fastfetch
+    lutris
+    protonup-qt
+    wineWowPackages.staging
+    winetricks
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -193,13 +200,13 @@
   # Or disable the firewall altogether.
   networking.firewall.enable = false;
 
-#   services.zram-generator.enable = true;
-#   services.zram-generator.settings = {
-#     zram0 = {
-#       zram-size = 16384;
-#       compression-algorithm = "lzo-rle zstd(level=3) (type=idle)";
-#     };
-#   };
+  services.zram-generator.enable = true;
+  services.zram-generator.settings = {
+    zram0 = {
+      zram-size = 16384;
+      compression-algorithm = "lzo-rle zstd(level=3) (type=idle)";
+    };
+  };
 
   services.tailscale.enable = true;
 
@@ -214,6 +221,8 @@
   };
 
   programs.gamemode.enable = true;
+
+  services.flatpak.enable = true;
 
 
   # Copy the NixOS configuration file and link it from the resulting system
